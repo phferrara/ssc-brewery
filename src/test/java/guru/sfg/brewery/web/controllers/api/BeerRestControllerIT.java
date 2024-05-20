@@ -13,7 +13,21 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Created by jt on 6/13/20.
  */
 @WebMvcTest
-public class BeerRestControllerIT extends BaseIT {
+class BeerRestControllerIT extends BaseIT {
+
+    @Test
+    void deleteBeerUrl() throws Exception{
+        mockMvc.perform(delete("/api/v1/beer/97df0c39-90c4-4ae0-b663-453e8e19c311")
+                        .param("apiKey","spring").param("apiSecret", "guru"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void deleteBeerBadCredsUrl() throws Exception{
+        mockMvc.perform(delete("/api/v1/beer/97df0c39-90c4-4ae0-b663-453e8e19c311")
+                        .param("apiKey","spring").header("apiSecret", "guruXXXX"))
+                .andExpect(status().isUnauthorized());
+    }
 
     @Test
     void deleteBeerBadCreds() throws Exception{

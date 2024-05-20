@@ -1,6 +1,7 @@
 package guru.sfg.brewery.config;
 
 import guru.sfg.brewery.security.RestHeaderAuthFilter;
+import guru.sfg.brewery.security.RestUrlAuthFilter;
 import guru.sfg.brewery.security.SfgPasswordEncoderFactories;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,26 +22,34 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-    public RestHeaderAuthFilter restHeaderAuthFilter(AuthenticationManager authenticationManager){
+    public RestHeaderAuthFilter restHeaderAuthFilter(AuthenticationManager authenticationManager) {
         RestHeaderAuthFilter filter = new RestHeaderAuthFilter(new AntPathRequestMatcher("/api/**"));
+        filter.setAuthenticationManager(authenticationManager);
+        return filter;
+    }
+
+    public RestUrlAuthFilter restUrlAuthFilter(AuthenticationManager authenticationManager) {
+        RestUrlAuthFilter filter= new RestUrlAuthFilter(new AntPathRequestMatcher("/api/**"));
         filter.setAuthenticationManager(authenticationManager);
         return filter;
     }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-                http.addFilterBefore(restHeaderAuthFilter(authenticationManager()),
+        http.addFilterBefore(restHeaderAuthFilter(authenticationManager()),
                         UsernamePasswordAuthenticationFilter.class)
                 .csrf().disable();
 
-                http
-                .authorizeRequests(authorize -> {
+        http.addFilterBefore(restUrlAuthFilter(authenticationManager()),
+                UsernamePasswordAuthenticationFilter.class);
+
+        http.authorizeRequests(authorize -> {
                     authorize
                             .antMatchers("/", "/webjars/**", "/login", "/resources/**").permitAll()
                             .antMatchers("/beers/find", "/beers*").permitAll()
                             .antMatchers(HttpMethod.GET, "/api/v1/beer/**").permitAll()
                             .mvcMatchers(HttpMethod.GET, "/api/v1/beerUpc/{upc}").permitAll();
-                } )
+                })
                 .authorizeRequests()
                 .anyRequest().authenticated()
                 .and()
@@ -49,7 +58,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
-    PasswordEncoder passwordEncoder(){
+    PasswordEncoder passwordEncoder() {
         return SfgPasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
@@ -84,19 +93,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 //
 //        return new InMemoryUserDetailsManager(admin, user);
 //    }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 }
