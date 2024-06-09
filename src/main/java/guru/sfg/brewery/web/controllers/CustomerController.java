@@ -48,7 +48,7 @@ public class CustomerController {
         return "customers/findCustomers";
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
+    @PreAuthorize("hasAuthority('customer.read')")
     @GetMapping
     public String processFindFormReturnMany(Customer customer, BindingResult result, Model model){
         // find customers by name
@@ -69,7 +69,8 @@ public class CustomerController {
         }
     }
 
-   @GetMapping("/{customerId}")
+    @PreAuthorize("hasAuthority('customer.read')")
+    @GetMapping("/{customerId}")
     public ModelAndView showCustomer(@PathVariable UUID customerId) {
         ModelAndView mav = new ModelAndView("customers/customerDetails");
         //ToDO: Add Service
@@ -77,13 +78,14 @@ public class CustomerController {
         return mav;
     }
 
+    @PreAuthorize("hasAuthority('customer.create')")
     @GetMapping("/new")
     public String initCreationForm(Model model) {
         model.addAttribute("customer", Customer.builder().build());
         return "customers/createCustomer";
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('customer.create')")
     @PostMapping("/new")
     public String processCreationForm(Customer customer) {
         //ToDO: Add Service
@@ -94,9 +96,8 @@ public class CustomerController {
         Customer savedCustomer= customerRepository.save(newCustomer);
         return "redirect:/customers/" + savedCustomer.getId();
     }
-
     @GetMapping("/{customerId}/edit")
-   public String initUpdateCustomerForm(@PathVariable UUID customerId, Model model) {
+    public String initUpdateCustomerForm(@PathVariable UUID customerId, Model model) {
        if(customerRepository.findById(customerId).isPresent())
           model.addAttribute("customer", customerRepository.findById(customerId).get());
        return "customers/createOrUpdateCustomer";
